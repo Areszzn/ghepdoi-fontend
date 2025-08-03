@@ -3,11 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { userAPI } from '@/lib/api';
-import { User, Eye, EyeOff, CreditCard, ArrowDownToLine, ArrowUpFromLine, Settings, LogOut } from 'lucide-react';
+import { User, Eye, EyeOff, CreditCard, ArrowDownToLine, ArrowUpFromLine, LogOut, RefreshCw } from 'lucide-react';
+import WithdrawModal from '@/components/Withdraw/WithdrawModal';
+import WithdrawHistoryModal from '@/components/Withdraw/WithdrawHistoryModal';
+import BankAccountModal from '@/components/BankAccount/BankAccountModal';
+import DevelopmentModal from '@/components/Common/DevelopmentModal';
 
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
@@ -16,7 +21,17 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  
+
+  // Modal states
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showWithdrawHistoryModal, setShowWithdrawHistoryModal] = useState(false);
+  const [showBankAccountModal, setShowBankAccountModal] = useState(false);
+  const [showDevelopmentModal, setShowDevelopmentModal] = useState(false);
+  const [developmentModalData, setDevelopmentModalData] = useState({ title: '', feature: '' });
+
+  // User balance
+  const [userBalance, setUserBalance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState({
     displayName: '',
   });
@@ -38,8 +53,39 @@ export default function ProfilePage() {
       setProfileData({
         displayName: user.displayName || '',
       });
+      fetchUserBalance();
     }
   }, [user]);
+
+  const fetchUserBalance = async () => {
+    try {
+      const response = await userAPI.getBalance();
+      setUserBalance(response.data.balance || 0);
+    } catch (error) {
+      console.error('Error fetching user balance:', error);
+    }
+  };
+
+  const refreshUserData = async () => {
+    try {
+      setRefreshing(true);
+
+      // Fetch updated user profile
+      const profileResponse = await userAPI.getProfile();
+      if (profileResponse.data && profileResponse.data.user) {
+        updateUser(profileResponse.data.user);
+      }
+
+      // Fetch updated balance
+      await fetchUserBalance();
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      setError('Không thể cập nhật thông tin');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,71 +152,98 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
+  // Modal handlers
+  const openDevelopmentModal = (title: string, feature: string) => {
+    setDevelopmentModalData({ title, feature });
+    setShowDevelopmentModal(true);
+  };
+
+  const handleWithdraw = () => {
+    setShowWithdrawModal(true);
+  };
+
+  const handleWithdrawHistory = () => {
+    setShowWithdrawHistoryModal(true);
+  };
+
+  const handleBankAccount = () => {
+    setShowBankAccountModal(true);
+  };
+
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-0">
-          {/* Header với gradient background */}
-          <div className="gradient-wallet rounded-t-3xl px-6 py-8 text-white relative overflow-hidden shadow-wallet">
-            {/* Settings icon */}
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => setShowPasswordForm(!showPasswordForm)}
-                className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors"
-              >
-                <Settings className="h-5 w-5 text-white" />
-              </button>
-            </div>
-
-            {/* User info */}
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center border-2 border-white border-opacity-30">
-                <span className="text-xl font-bold text-white">
-                  {user?.displayName?.[0] || user?.username?.[0]}
-                </span>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{user?.username || 'xuandong87'}</h2>
-                <div className="flex items-center mt-1">
-                  <div className="bg-yellow-400 rounded-full p-1 mr-2">
-                    <span className="text-xs font-bold text-purple-800">👑</span>
-                  </div>
-                  <span className="text-yellow-300 font-semibold">VIP 1</span>
+        <div className="space-y-0 relative">
+          {/* Header với gradient tím-hồng */}
+          <div className="rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-10 text-white relative overflow-hidden shadow-lg">
+            {/* User info - Avatar, name và VIP trên cùng 1 dòng */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="h-16 w-16 rounded-full overflow-hidden border-3 border-white shadow-lg">
+                  <Image
+                    src="/avt1.png"
+                    alt="Avatar"
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h2 className="text-xl">{user?.username || 'xuandong87'}</h2>
                 </div>
               </div>
+              <div className="flex items-center space-x-2 bg-yellow-500 bg-opacity-20 px-5 py-1 rounded-full">
+                <span>VIP {user?.vip || 1}</span>
+              </div>
             </div>
+          </div>
 
-            {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                href="/deposit"
-                className="bg-orange-400 bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
-              >
-                <ArrowDownToLine className="h-6 w-6 mx-auto mb-2" />
-                <span className="text-sm font-medium">Nạp tiền</span>
-              </Link>
-              <Link
-                href="/withdraw"
-                className="bg-orange-400 bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
-              >
-                <ArrowUpFromLine className="h-6 w-6 mx-auto mb-2" />
-                <span className="text-sm font-medium">Rút tiền</span>
-              </Link>
+          {/* Nút nạp, rút nằm ở vị trí giao giữa header và nội dung */}
+          <div className="relative -mt-6 mx-4 mb-6 z-10">
+            <div className="bg-white rounded-2xl shadow-lg p-2">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => openDevelopmentModal('Nạp Tiền', 'Chức năng nạp tiền')}
+                  className="flex items-center justify-center space-x-2 bg-blue-50 text-gray-500 rounded-xl p-4 hover:bg-blue-100 transition-all duration-200"
+                >
+                  <ArrowDownToLine className="h-5 w-5" />
+                  <span className="font-medium">Nạp tiền</span>
+                </button>
+                <button
+                  onClick={handleWithdraw}
+                  className="flex items-center justify-center space-x-2 bg-purple-50 text-gray-500 rounded-xl p-4 hover:bg-purple-100 transition-all duration-200"
+                >
+                  <ArrowUpFromLine className="h-5 w-5" />
+                  <span className="font-medium">Rút tiền</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Wallet section */}
-          <div className="bg-white px-6 py-6 -mt-4 rounded-b-3xl shadow-lg">
+          <div className="bg-white px-4 py-6 rounded-3xl drop-shadow-lg">
             <div className="text-center mb-6">
-              <p className="text-gray-500 text-sm mb-2">Ví của tôi</p>
-              <div className="flex items-center justify-center space-x-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-gray-500 text-sm">Ví của tôi</p>
+                <button
+                  onClick={refreshUserData}
+                  disabled={refreshing}
+                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors disabled:opacity-50"
+                  title="Làm mới thông tin"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+              <div className="flex items-center justify-center space-x-6">
                 <div>
-                  <p className="text-3xl font-bold text-purple-600">0</p>
-                  <p className="text-gray-500 text-sm">Số tiền</p>
+                  <p className="text-xl font-bold text-purple-600">
+                    {userBalance.toLocaleString('vi-VN')}
+                  </p>
+                  <p className="text-gray-500 text-sm"> VND</p>
                 </div>
                 <div className="w-px h-12 bg-gray-200"></div>
                 <div>
-                  <p className="text-3xl font-bold text-purple-600">100</p>
+                  <p className="text-xl font-bold text-purple-600">{user?.trust || 0}</p>
                   <p className="text-gray-500 text-sm">Điểm tin nhiệm</p>
                 </div>
               </div>
@@ -178,50 +251,45 @@ export default function ProfilePage() {
 
             {/* Menu grid */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer">
+              <button
+                onClick={handleBankAccount}
+                className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:scale-105 transition-all duration-200 active:scale-95"
+              >
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
                   <CreditCard className="h-5 w-5 text-blue-600" />
                 </div>
-                <span className="text-sm text-gray-700 text-center">Chi tiết tài khoản</span>
-              </div>
+                <span className="text-sm text-gray-700 text-center">Thông tin ngân hàng</span>
+              </button>
 
               <button
-                onClick={() => setShowPasswordForm(!showPasswordForm)}
-                className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 hover:scale-105 transition-all duration-200 active:scale-95"
+                onClick={() => openDevelopmentModal('Thông Tin Cá Nhân', 'Chức năng quản lý thông tin cá nhân')}
+                className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:scale-105 transition-all duration-200 active:scale-95"
               >
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                  <User className="h-5 w-5 text-gray-600" />
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
+                  <User className="h-5 w-5 text-purple-600" />
                 </div>
                 <span className="text-sm text-gray-700 text-center">Thông tin cá nhân</span>
               </button>
 
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-green-50 hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                  <ArrowDownToLine className="h-5 w-5 text-green-600" />
+              <button
+                onClick={handleWithdrawHistory}
+                className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-orange-50 hover:scale-105 transition-all duration-200 active:scale-95"
+              >
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-2">
+                  <ArrowUpFromLine className="h-5 w-5 text-orange-600" />
                 </div>
                 <span className="text-sm text-gray-700 text-center">Lịch sử rút tiền</span>
-              </div>
+              </button>
 
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
-                  <ArrowUpFromLine className="h-5 w-5 text-purple-600" />
+              <button
+                onClick={() => openDevelopmentModal('Lịch Sử Nạp Tiền', 'Chức năng lịch sử nạp tiền')}
+                className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-teal-50 hover:scale-105 transition-all duration-200 active:scale-95"
+              >
+                <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mb-2">
+                  <ArrowDownToLine className="h-5 w-5 text-teal-600" />
                 </div>
                 <span className="text-sm text-gray-700 text-center">Lịch sử nạp tiền</span>
-              </div>
-
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-red-50 hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mb-2">
-                  <Settings className="h-5 w-5 text-red-600" />
-                </div>
-                <span className="text-sm text-gray-700 text-center">Thông báo</span>
-              </div>
-
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-indigo-50 hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer">
-                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mb-2">
-                  <User className="h-5 w-5 text-indigo-600" />
-                </div>
-                <span className="text-sm text-gray-700 text-center">Chăm sóc khách hàng</span>
-              </div>
+              </button>
 
               <button
                 onClick={handleLogout}
@@ -428,6 +496,39 @@ export default function ProfilePage() {
 
 
         </div>
+
+        {/* Modals */}
+        <WithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => {
+            setShowWithdrawModal(false);
+            refreshUserData();
+          }}
+          userBalance={userBalance}
+        />
+
+        <WithdrawHistoryModal
+          isOpen={showWithdrawHistoryModal}
+          onClose={() => {
+            setShowWithdrawHistoryModal(false);
+            refreshUserData();
+          }}
+        />
+
+        <BankAccountModal
+          isOpen={showBankAccountModal}
+          onClose={() => {
+            setShowBankAccountModal(false);
+            refreshUserData();
+          }}
+        />
+
+        <DevelopmentModal
+          isOpen={showDevelopmentModal}
+          onClose={() => setShowDevelopmentModal(false)}
+          title={developmentModalData.title}
+          feature={developmentModalData.feature}
+        />
       </DashboardLayout>
     </ProtectedRoute>
   );

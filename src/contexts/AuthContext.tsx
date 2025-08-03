@@ -8,6 +8,8 @@ interface User {
   username: string;
   displayName: string;
   isVerified: boolean;
+  vip?: number;
+  trust?: number;
 }
 
 interface AuthContextType {

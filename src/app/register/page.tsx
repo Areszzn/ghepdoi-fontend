@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/hooks/useSettings';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -20,6 +21,7 @@ export default function RegisterPage() {
 
   const { register } = useAuth();
   const router = useRouter();
+  const { settings } = useSettings();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -51,7 +53,7 @@ export default function RegisterPage() {
         password: formData.password,
         displayName: formData.displayName || undefined,
       });
-      router.push('/deposit');
+      router.push('/profile');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       setError(errorMessage);
@@ -61,9 +63,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 py-8 max-w-md mx-auto">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-8 max-w-md mx-auto relative"
+      style={{
+        backgroundImage: settings.bg_reg ? `url(${settings.bg_reg})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: settings.bg_reg ? 'transparent' : 'black'
+      }}
+    >
+      {/* Overlay for better text readability */}
+      {settings.bg_reg && (
+        <div className="absolute inset-0 bg-opacity-50"></div>
+      )}
       {/* Back Button */}
-      <div className="absolute top-6 left-6">
+      <div className="absolute top-6 left-6 z-10">
         <button
           onClick={() => window.history.back()}
           className="text-white p-2 hover:bg-gray-800 rounded-full transition-colors"
@@ -75,25 +90,39 @@ export default function RegisterPage() {
       </div>
 
       {/* Logo */}
-      <div className="mb-12">
+      <div className="mb-12 relative z-10">
         <div className="w-24 h-24 mx-auto mb-4 relative">
-          <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">DW</span>
+          {settings.logo_app ? (
+            <img
+              src={settings.logo_app}
+              alt="App Logo"
+              className="w-full h-full rounded-full object-cover"
+              onError={(e) => {
+                // Fallback to default gradient if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-full h-full rounded-full flex items-center justify-center ${settings.logo_app ? 'hidden' : ''}`}>
           </div>
         </div>
         <div className="text-center">
-          <h1 className="text-white text-lg font-semibold">NGỌC NU</h1>
+          <h1 className="text-white text-lg font-semibold drop-shadow-lg">
+            {settings.name_app}
+          </h1>
         </div>
       </div>
 
       {/* Title */}
-      <div className="mb-8">
-        <h2 className="text-white text-2xl font-bold text-center">
+      <div className="mb-8 relative z-10">
+        <h2 className="text-white text-2xl font-bold text-center drop-shadow-lg">
           Đăng Ký
         </h2>
       </div>
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6 relative z-10">
         <form className="w-full space-y-4" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-500 bg-opacity-20 border border-red-500 rounded-lg p-3">

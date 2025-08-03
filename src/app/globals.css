@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #dddddd;
     --foreground: #ededed;
   }
 }
@@ -24,7 +24,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   /* Force mobile layout for all screen sizes */
-  max-width: 640px; /* max-w-xl equivalent */
+  max-width: 590px; /* max-w-xl equivalent */
   margin: 0 auto;
   overflow-x: hidden;
 }
@@ -36,7 +36,7 @@ html {
 
 /* Ensure all containers respect mobile layout */
 .mobile-container {
-  max-width: 640px;
+  max-width: 590px;
   margin: 0 auto;
   min-height: 100vh;
 }
@@ -80,4 +80,13 @@ html {
 /* Custom shadows */
 .shadow-wallet {
   box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3), 0 10px 10px -5px rgba(139, 92, 246, 0.04);
+}
+input {
+  width: 100%;
+  padding: 0.5rem 0.75rem; /* tương đương Tailwind: py-2 px-3 */
+  border: 1px solid #d1d5db; /* border-gray-300 */
+  border-radius: 0.5rem;     /* rounded-lg */
+  font-size: 1rem;
+  color: #1f2937;            /* text-gray-800 */
+  background-color: #fff;
 }

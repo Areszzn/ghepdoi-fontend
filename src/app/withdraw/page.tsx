@@ -9,12 +9,11 @@ import { ArrowUpFromLine, CreditCard, DollarSign, AlertCircle } from 'lucide-rea
 
 interface BankAccount {
   id: number;
-  account_name: string;
-  account_number: string;
-  bank_name: string;
-  account_type: string;
-  is_primary: boolean;
-  is_verified: boolean;
+  tentaikhoan: string;
+  sotaikhoan: number;
+  tennganhang: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function WithdrawPage() {
@@ -38,13 +37,12 @@ export default function WithdrawPage() {
   const fetchAccounts = async () => {
     try {
       const response = await bankAccountAPI.getAll();
-      const accountsData = response.data.accounts;
+      const accountsData = response.data.data;
       setAccounts(accountsData);
-      
-      // Auto-select primary account if available
-      const primaryAccount = accountsData.find((acc: BankAccount) => acc.is_primary);
-      if (primaryAccount) {
-        setFormData(prev => ({ ...prev, bankAccountId: primaryAccount.id.toString() }));
+
+      // Auto-select first account if available
+      if (accountsData.length > 0) {
+        setFormData(prev => ({ ...prev, bankAccountId: accountsData[0].id.toString() }));
       }
     } catch (error) {
       setError('Failed to fetch bank accounts');
@@ -230,8 +228,7 @@ export default function WithdrawPage() {
                       <option value="">Select a bank account</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.id}>
-                          {account.account_name} - {account.bank_name} ({maskAccountNumber(account.account_number)})
-                          {account.is_primary ? ' • Primary' : ''}
+                          {account.tentaikhoan} - {account.tennganhang} ({maskAccountNumber(account.sotaikhoan.toString())})
                         </option>
                       ))}
                     </select>
@@ -253,24 +250,18 @@ export default function WithdrawPage() {
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">
-                                {selectedAccount.account_name}
+                                {selectedAccount.tentaikhoan}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {selectedAccount.bank_name} • {selectedAccount.account_type}
+                                {selectedAccount.tennganhang}
                               </p>
                               <p className="text-xs text-gray-400">
-                                {maskAccountNumber(selectedAccount.account_number)}
+                                {maskAccountNumber(selectedAccount.sotaikhoan.toString())}
                               </p>
                             </div>
                             <div className="flex-shrink-0">
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                  selectedAccount.is_verified
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}
-                              >
-                                {selectedAccount.is_verified ? 'Verified' : 'Pending'}
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Active
                               </span>
                             </div>
                           </div>

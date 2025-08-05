@@ -102,10 +102,9 @@ export default function WithdrawPage() {
   const formatCurrency = (amount: string) => {
     const num = parseFloat(amount);
     if (isNaN(num)) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(num);
+    // Convert to integer to remove decimal places, then format with dots
+    const integerAmount = Math.floor(num);
+    return integerAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND';
   };
 
   const maskAccountNumber = (accountNumber: string) => {

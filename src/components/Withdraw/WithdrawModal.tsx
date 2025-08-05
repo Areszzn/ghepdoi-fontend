@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../Modal/Modal';
 import { bankAccountAPI, transactionAPI } from '@/lib/api';
 import { ArrowUpFromLine, CreditCard } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface BankAccount {
   id: number;
@@ -256,7 +257,7 @@ export default function WithdrawModal({ isOpen, onClose, userBalance }: Withdraw
         <form onSubmit={handleWithdrawSubmit} className="space-y-4">
           <div className="text-center mb-6">
             <ArrowUpFromLine className="h-12 w-12 text-purple-600 mx-auto mb-2" />
-            <p className="text-gray-600">Số dư hiện tại: <span className="font-semibold text-purple-600">{userBalance.toLocaleString()} VND</span></p>
+            <p className="text-gray-600">Số dư hiện tại: <span className="font-semibold text-purple-600">{formatCurrency(userBalance)} VND</span></p>
           </div>
 
           {bankAccount && (

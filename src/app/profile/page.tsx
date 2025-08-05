@@ -9,6 +9,7 @@ import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { userAPI } from '@/lib/api';
 import { User, Eye, EyeOff, CreditCard, ArrowDownToLine, ArrowUpFromLine, LogOut, RefreshCw } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import WithdrawModal from '@/components/Withdraw/WithdrawModal';
 import WithdrawHistoryModal from '@/components/Withdraw/WithdrawHistoryModal';
 import BankAccountModal from '@/components/BankAccount/BankAccountModal';
@@ -86,6 +87,8 @@ export default function ProfilePage() {
       setRefreshing(false);
     }
   };
+
+
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,7 +184,7 @@ export default function ProfilePage() {
               <div className="flex items-center space-x-4">
                 <div className="h-16 w-16 rounded-full overflow-hidden border-3 border-white shadow-lg">
                   <Image
-                    src="/avt1.png"
+                    src="/avt2.png"
                     alt="Avatar"
                     width={64}
                     height={64}
@@ -235,11 +238,11 @@ export default function ProfilePage() {
                 </button>
               </div>
               <div className="flex items-center justify-center space-x-6">
-                <div>
+                <div className='flex items-center'>
                   <p className="text-xl font-bold text-purple-600">
-                    {userBalance.toLocaleString('vi-VN')}
+                    {formatCurrency(userBalance)}
                   </p>
-                  <p className="text-gray-500 text-sm"> VND</p>
+                  <p className="text-gray-500 text-sm pl-4"> VND</p>
                 </div>
                 <div className="w-px h-12 bg-gray-200"></div>
                 <div>

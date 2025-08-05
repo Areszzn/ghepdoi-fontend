@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../Modal/Modal';
 import { transactionAPI } from '@/lib/api';
-import { ArrowUpFromLine, Clock, CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
+import { ArrowUpFromLine, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { formatCurrencyVND } from '@/lib/utils';
 
 interface Transaction {
   id: number;
@@ -139,12 +140,7 @@ export default function WithdrawHistoryModal({ isOpen, onClose }: WithdrawHistor
   };
 
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
-  };
+
 
   const maskAccountNumber = (accountNumber: string) => {
     if (!accountNumber || accountNumber.length <= 4) return accountNumber;
@@ -191,7 +187,7 @@ export default function WithdrawHistoryModal({ isOpen, onClose }: WithdrawHistor
                       </span>
                       <div className="flex items-center space-x-2">
                         <p className="font-semibold text-gray-600">
-                          Số tiền: {formatCurrency(transaction.amount)}
+                          Số tiền: {formatCurrencyVND(transaction.amount)}
                         </p>
                         {['pending', 'processing'].includes(transaction.status.toLowerCase()) && (
                           <button

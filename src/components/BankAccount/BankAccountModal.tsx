@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../Modal/Modal';
 import { bankAccountAPI } from '@/lib/api';
-import { CreditCard, Plus, Trash2 } from 'lucide-react';
+import { CreditCard, Plus, Eye, EyeOff } from 'lucide-react';
 
 interface BankAccount {
   id: number;
@@ -24,6 +24,7 @@ export default function BankAccountModal({ isOpen, onClose }: BankAccountModalPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [visibleAccounts, setVisibleAccounts] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -45,27 +46,45 @@ export default function BankAccountModal({ isOpen, onClose }: BankAccountModalPr
     }
   };
 
-  const handleDelete = async (accountId: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa tài khoản ngân hàng này?')) {
-      return;
-    }
+  // const handleDelete = async (accountId: number) => {
+  //   if (!confirm('Bạn có chắc chắn muốn xóa tài khoản ngân hàng này?')) {
+  //     return;
+  //   }
 
-    try {
-      await bankAccountAPI.delete(accountId);
-      setSuccess('Đã xóa tài khoản ngân hàng');
-      fetchBankAccounts();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Không thể xóa tài khoản ngân hàng';
-      setError(errorMessage || 'Không thể xóa tài khoản ngân hàng');
-    }
+  //   try {
+  //     await bankAccountAPI.delete(accountId);
+  //     setSuccess('Đã xóa tài khoản ngân hàng');
+  //     fetchBankAccounts();
+  //     setTimeout(() => setSuccess(''), 3000);
+  //   } catch (error: unknown) {
+  //     const errorMessage = error instanceof Error && 'response' in error
+  //       ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+  //       : 'Không thể xóa tài khoản ngân hàng';
+  //     setError(errorMessage || 'Không thể xóa tài khoản ngân hàng');
+  //   }
+  // };
+
+  const toggleAccountVisibility = (accountId: number) => {
+    setVisibleAccounts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(accountId)) {
+        newSet.delete(accountId);
+      } else {
+        newSet.add(accountId);
+      }
+      return newSet;
+    });
   };
 
   const maskAccountNumber = (accountNumber: string) => {
     if (!accountNumber || accountNumber.length <= 4) return accountNumber;
     return '*'.repeat(accountNumber.length - 4) + accountNumber.slice(-4);
+  };
+
+  const displayAccountNumber = (account: BankAccount) => {
+    return visibleAccounts.has(account.id)
+      ? account.sotaikhoan.toString()
+      : maskAccountNumber(account.sotaikhoan.toString());
   };
 
   const formatDate = (dateString: string) => {
@@ -127,9 +146,22 @@ export default function BankAccountModal({ isOpen, onClose }: BankAccountModalPr
                       {account.tennganhang}
                     </p>
 
-                    <p className="text-sm text-gray-600 mb-2">
-                      {maskAccountNumber(account.sotaikhoan.toString())}
-                    </p>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <p className="text-sm text-gray-600">
+                        {displayAccountNumber(account)}
+                      </p>
+                      <button
+                        onClick={() => toggleAccountVisibility(account.id)}
+                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                        title={visibleAccounts.has(account.id) ? "Ẩn số tài khoản" : "Hiện số tài khoản"}
+                      >
+                        {visibleAccounts.has(account.id) ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
 
                     <p className="text-xs text-gray-500">
                       Thêm ngày: {formatDate(account.created_at)}
@@ -137,13 +169,13 @@ export default function BankAccountModal({ isOpen, onClose }: BankAccountModalPr
                   </div>
                 </div>
                 
-                <button
+                {/* <button
                   onClick={() => handleDelete(account.id)}
                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   title="Xóa tài khoản"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </button> */}
               </div>
             </div>
           ))}

@@ -5,12 +5,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { Clock, Eye, ArrowLeft, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: "Bài viết hẹn hò",
-  description: "Khám phá những bài viết hữu ích về hẹn hò, tình yêu và mối quan hệ. Học cách tạo ấn tượng tốt, duy trì mối quan hệ và tìm kiếm tình yêu đích thực.",
-};
 
 interface Article {
   id: number;

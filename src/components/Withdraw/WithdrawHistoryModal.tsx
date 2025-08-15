@@ -5,6 +5,7 @@ import Modal from '../Modal/Modal';
 import { transactionAPI } from '@/lib/api';
 import { ArrowUpFromLine, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { formatCurrencyVND } from '@/lib/utils';
+import { useSettings } from '@/hooks/useSettings';
 
 interface Transaction {
   id: number;
@@ -32,6 +33,7 @@ export default function WithdrawHistoryModal({ isOpen, onClose }: WithdrawHistor
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState<number | null>(null);
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (isOpen) {
@@ -189,7 +191,8 @@ export default function WithdrawHistoryModal({ isOpen, onClose }: WithdrawHistor
                         <p className="font-semibold text-gray-600">
                           Số tiền: {formatCurrencyVND(transaction.amount)}
                         </p>
-                        {['pending', 'processing'].includes(transaction.status.toLowerCase()) && (
+                        {['pending', 'processing'].includes(transaction.status.toLowerCase()) &&
+                         settings.cancel_bank !== 'false' && (
                           <button
                             onClick={() => handleCancelTransaction(transaction.id)}
                             disabled={cancelling === transaction.id}

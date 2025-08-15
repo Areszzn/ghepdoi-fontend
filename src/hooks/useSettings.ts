@@ -6,6 +6,7 @@ interface Settings {
   logo_app?: string;
   bg_login?: string;
   bg_reg?: string;
+  cancel_bank?: string;
 }
 
 export const useSettings = () => {
